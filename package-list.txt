@@ -1,0 +1,6 @@
+py-cord
+python-dotenv
+sqlalchemy
+pymysql
+requests
+cryptography
