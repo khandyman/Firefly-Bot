@@ -42,7 +42,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT b.char_name, b.char_race, b.char_class, b.char_type, b.char_priority FROM firefly_bot.characters a"
+            "SELECT b.char_name, b.char_race, b.char_class, b.char_tradeskill, b.char_type, b.char_priority FROM firefly_bot.characters a"
             f" JOIN firefly_bot.characters b ON a.discord_id = b.discord_id WHERE a.char_name = '{char_name}'"
             "ORDER BY b.char_priority ASC"
         )
@@ -106,7 +106,8 @@ class Database:
         return self.get_list(self.get_all_characters(), 'char_name')
 
     ################# UPDATE METHODS #################
-    def insert_character(self, discord_id, char_name, char_race, char_class, char_type, char_priority):
+    def insert_character(self, discord_id, char_name, char_race, char_class,
+                         char_tradeskill, char_type, char_priority):
         """
         Add a new character to the database
         :parameters: the details of the new character
@@ -114,13 +115,14 @@ class Database:
         """
         query = (
             "INSERT INTO firefly_bot.characters"
-            "(discord_id, char_name, char_race, char_class, char_type, is_officer, char_priority)"
-            f" VALUES ('{discord_id}', '{char_name}', '{char_race}', '{char_class}', '{char_type}', 0, {char_priority})"
+            "(discord_id, char_name, char_race, char_class, char_tradeskill, char_type, is_officer, char_priority)"
+            f" VALUES ('{discord_id}', '{char_name}', '{char_race}', '{char_class}', '{char_tradeskill}', '{char_type}', 0, {char_priority})"
         )
 
         return self.execute_update(query)
 
-    def update_character(self, char_name, new_name, char_race, char_class, char_type):
+    def update_character(self, char_name, new_name, char_race, char_class,
+                         char_tradeskill, char_type):
         """
         Edit an existing character to have new attributes
         :parameters: the updated details of the character
@@ -138,6 +140,9 @@ class Database:
 
         if char_class is not None:
             query = query + f"char_class = '{char_class}', "
+
+        if char_tradeskill is not None:
+            query = query + f"char_tradeskill = '{char_tradeskill}', "
 
         # translate char type to an int, since this is hidden from user
         if char_type is not None:

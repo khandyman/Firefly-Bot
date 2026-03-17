@@ -31,11 +31,11 @@ class Helpers:
         each item is a different character
         :return: formatted string
         """
-        headers = "Name Race Class Type".split()
-        row = "{:<15} {:<10} {:<15} {:<5} \n"       # set column widths
+        headers = "Name Race Class Tradeskill Type".split()
+        row = "{:<15} {:<10} {:<15} {:<15} {:<5} \n"       # set column widths
 
         message = row.format(*headers)
-        message = message + "-" * 52 + "\n"         # add a separator
+        message = message + "-" * 63 + "\n"         # add a separator
 
         for result in results:
             # for each character, arrange them in the correct order
@@ -43,6 +43,7 @@ class Helpers:
                 str(result['char_name']),
                 str(result['char_race']),
                 str(result['char_class']),
+                str(result['char_tradeskill']),
                 str(result['char_type'])
             )
 

@@ -18,6 +18,7 @@ class Updates(commands.Cog):
         self._discord_list = []
         self._race_list = []
         self._class_list = []
+        self._tradekill_list = []
         self._type_list = []
 
     async def char_name_autocompletion(
@@ -57,7 +58,7 @@ class Updates(commands.Cog):
             ctx: discord.AutocompleteContext
     ):
         """
-        Create a filtering list of eq races
+        Create a filtering list of MnM races
         :param ctx: the application context of the bot
         :return: filtered list
         """
@@ -73,7 +74,7 @@ class Updates(commands.Cog):
             ctx: discord.AutocompleteContext
     ):
         """
-        Create a filtering list of eq classes
+        Create a filtering list of MnM classes
         :param ctx: the application context of the bot
         :return: filtered list
         """
@@ -83,6 +84,22 @@ class Updates(commands.Cog):
             self._class_list = self._helper.get_classes()
 
         return [choice for choice in self._class_list if current_value.lower() in choice.lower()]
+
+    async def tradeskills_autocompletion(
+            self,
+            ctx: discord.AutocompleteContext
+    ):
+        """
+        Create a filtering list of MnM tradeskills
+        :param ctx: the application context of the bot
+        :return: filtered list
+        """
+        current_value = ctx.value
+
+        if len(self._tradekill_list) == 0:
+            self._tradekill_list = self._helper.get_tradeskills()
+
+        return [choice for choice in self._tradekill_list if current_value.lower() in choice.lower()]
 
     async def types_autocompletion(
             self,
@@ -125,6 +142,12 @@ class Updates(commands.Cog):
                 autocomplete=classes_autocompletion,
                 required=False
             ),
+            char_tradeskill: discord.Option(
+                str,
+                description='Monsters and Memories primary tradeskill',
+                autocomplete=tradeskills_autocompletion,
+                required=False
+            ),
             char_type: discord.Option(
                 str,
                 description='Monsters and Memories character type',
@@ -137,8 +160,9 @@ class Updates(commands.Cog):
         :param ctx: the application context of the bot
         :param discord_name: string selected from dropdown (required)
         :param char_name: string entered by user (required)
-        :param char_race: string (all eq races) selected from dropdown (optional)
-        :param char_class: string (all eq classes) selected from dropdown (optional)
+        :param char_race: string (all MnM races) selected from dropdown (optional)
+        :param char_class: string (all MnM classes) selected from dropdown (optional)
+        :param char_tradeskill: string (all MnM tradeskills) selected from dropdown (optional)
         :param char_type: string (main/alt/mule) selected from dropdown (optional)
         :return: none
         """
@@ -180,7 +204,7 @@ class Updates(commands.Cog):
 
         try:
             results = self._database.insert_character(discord_id, char_name, char_race,
-                                          char_class, char_type, char_priority)
+                                          char_class, char_tradeskill, char_type, char_priority)
             row = self._helper.get_row(results)
 
             # customize response message to user based on how
@@ -192,6 +216,9 @@ class Updates(commands.Cog):
 
             if char_class is not None:
                 message = message + f"{char_class} | "
+
+            if char_tradeskill is not None:
+                message = message + f"{char_tradeskill} | "
 
             if char_type is not None:
                 message = message + f"{char_type} | "
@@ -243,6 +270,12 @@ class Updates(commands.Cog):
                 autocomplete=classes_autocompletion,
                 required=False
             ),
+            char_tradeskill: discord.Option(
+                str,
+                description='New primary tradeskill',
+                autocomplete=tradeskills_autocompletion,
+                required=False
+            ),
             char_type: discord.Option(
                 str,
                 description='New type',
@@ -257,6 +290,7 @@ class Updates(commands.Cog):
         :param new_name: string entered by user if name needs changed (optional)
         :param char_race: string (all eq races) selected from dropdown (optional)
         :param char_class: string (all eq classes) selected from dropdown (optional)
+        :param char_tradeskill: string (all MnM tradeskills) selected from dropdown (optional)
         :param char_type: string (main/alt/mule) selected from dropdown (optional)
         :return: none
         """
@@ -284,7 +318,7 @@ class Updates(commands.Cog):
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
         results = self._database.update_character(
-            char_name, new_name, char_race, char_class, char_type
+            char_name, new_name, char_race, char_class, char_tradeskill, char_type
         )
         row = self._helper.get_row(results)
 
@@ -301,6 +335,9 @@ class Updates(commands.Cog):
 
             if char_class is not None:
                 message = message + f"{char_class} | "
+
+            if char_tradeskill is not None:
+                message = message + f"{char_tradeskill} | "
 
             if char_type is not None:
                 message = message + f"{char_type} | "
@@ -322,7 +359,7 @@ class Updates(commands.Cog):
             ctx: discord.ApplicationContext,
             char_name: discord.Option(
                 str,
-                description='EverQuest character name',
+                description='Monsters and Memories character name',
                 autocomplete=char_name_autocompletion
             )
     ):
