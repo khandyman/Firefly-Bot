@@ -359,49 +359,6 @@ class Updates(commands.Cog):
             ephemeral=True
         )
 
-    # @discord.slash_command(
-    #     name="update_respawns",
-    #     description="Syncs bot database respawn times with Quarm database"
-    # )
-    # async def update_respawns(
-    #         self,
-    #         ctx: discord.ApplicationContext,
-    # ):
-    #     """
-    #     Sync the respawn times in the database with the Quarm database
-    #     :param ctx: the application context of the bot
-    #     :return: none
-    #     """
-    #     # this slash command only available to officers
-    #     target_role = discord.utils.get(ctx.guild.roles, name="Officer")
-    #
-    #     # if validate_role returns false, user is not authorized,
-    #     # so exit function
-    #     if not self._helper.validate_role(ctx.author.roles, target_role):
-    #         await self.not_authorized(ctx)
-    #         return
-    #
-    #     self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
-    #
-    #     # this is a moderately long process, so inform user
-    #     await ctx.respond(
-    #         "```Updating all mob respawn times. This will take a while.\n"
-    #         "Please be patient...```",
-    #         ephemeral=True
-    #     )
-    #
-    #     # obtain databse mob list
-    #     mob_list = self._database.get_all_mob_names()
-    #
-    #     # run tracker update method; does not return anything
-    #     self._tracker.update_respawn_times(mob_list)
-    #
-    #     # notify user process is complete
-    #     await ctx.respond(
-    #         "```Database mob respawn time update is complete.```",
-    #         ephemeral=True
-    #     )
-
     async def not_authorized(
             self,
             ctx: discord.ApplicationContext

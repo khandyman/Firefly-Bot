@@ -27,7 +27,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            ("SELECT discord_id, char_name FROM sos_bot.characters "
+            ("SELECT discord_id, char_name FROM firefly_bot.characters "
              "WHERE char_type = 'Main' ORDER BY char_name")
         )
 
@@ -42,8 +42,8 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT b.char_name, b.char_race, b.char_class, b.char_type, b.char_priority FROM sos_bot.characters a"
-            f" JOIN sos_bot.characters b ON a.discord_id = b.discord_id WHERE a.char_name = '{char_name}'"
+            "SELECT b.char_name, b.char_race, b.char_class, b.char_type, b.char_priority FROM firefly_bot.characters a"
+            f" JOIN firefly_bot.characters b ON a.discord_id = b.discord_id WHERE a.char_name = '{char_name}'"
             "ORDER BY b.char_priority ASC"
         )
 
@@ -56,7 +56,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT char_name from sos_bot.characters WHERE "
+            "SELECT char_name from firefly_bot.characters WHERE "
             f" discord_id = {discord_id} AND char_type = 'Main'"
         )
 
@@ -69,7 +69,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT discord_id from sos_bot.characters WHERE "
+            "SELECT discord_id from firefly_bot.characters WHERE "
             f" char_name = '{char_name}'"
         )
 
@@ -81,7 +81,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT char_name FROM sos_bot.characters WHERE char_type = 'Main' ORDER BY char_name"
+            "SELECT char_name FROM firefly_bot.characters WHERE char_type = 'Main' ORDER BY char_name"
         )
 
         return self.get_list(self.execute_read(query), 'char_name')
@@ -92,7 +92,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT discord_id, char_name FROM sos_bot.characters"
+            "SELECT discord_id, char_name FROM firefly_bot.characters"
         )
 
         return self.execute_read(query)
@@ -105,72 +105,6 @@ class Database:
         """
         return self.get_list(self.get_all_characters(), 'char_name')
 
-    # def get_all_mob_names(self):
-    #     """
-    #     Get all mob names
-    #     :return: results of the select query, in list form
-    #     """
-    #     query = (
-    #         "SELECT mob_name FROM sos_bot.respawns"
-    #     )
-    #
-    #     return self.get_list(self.execute_read(query), 'mob_name')
-
-    # def get_all_zone_names(self):
-    #     """
-    #     Get all zone names
-    #     :return: results of the select query, in list form
-    #     """
-    #     query = (
-    #         "SELECT DISTINCT mob_zone FROM sos_bot.respawns"
-    #     )
-    #
-    #     return self.get_list(self.execute_read(query), 'mob_zone')
-
-    # def get_mob_data(self, mob_name):
-    #     """
-    #     obtain all fields of a mob's database entry
-    #     :param mob_name: string
-    #     :return: results of the select query, in list form
-    #     """
-    #     query = f"SELECT * FROM sos_bot.respawns WHERE mob_name = '{mob_name}'"
-    #
-    #     return self.execute_read(query)
-
-    # def get_mob_respawn(self, mob_name):
-    #     """
-    #     get the kill, respawn, and time zone data for a mob
-    #     :param mob_name: string
-    #     :return: results of the select query, in list form
-    #     """
-    #     query = (f"SELECT mob_name, kill_time, respawn_time, time_zone FROM sos_bot.respawns "
-    #              f"WHERE mob_name = '{mob_name}'")
-    #
-    #     return self.execute_read(query)
-    #
-    # def get_zone_respawns(self, zone_name):
-    #     """
-    #     obtain all fields of each mob's database entry for a given zone
-    #     :param zone_name: string
-    #     :return: results of the select query, in list form
-    #     """
-    #     # special processing to handle single quotes in zone names
-    #     # single quotes are invalid in SQL queries
-    #     find_quote = zone_name.find("'")
-    #
-    #     # if a single quote was found, insert an additional
-    #     # single quote into the SQL string at the position
-    #     # of the existing quote, this escapes the quote,
-    #     # allowing the query string to go through as valid
-    #     if find_quote != -1:
-    #         temp_zone = zone_name
-    #         zone_name = temp_zone[:find_quote] + "'" + temp_zone[find_quote:]
-    #
-    #     query = (f"SELECT mob_name, mob_zone, kill_time, respawn_time, time_zone FROM sos_bot.respawns "
-    #              f"WHERE mob_zone = '{zone_name}'")
-    #
-    #     return self.execute_read(query)
-
     ################# UPDATE METHODS #################
     def insert_character(self, discord_id, char_name, char_race, char_class, char_type, char_priority):
         """
@@ -179,7 +113,7 @@ class Database:
         :return: results of the insert query
         """
         query = (
-            "INSERT INTO sos_bot.characters"
+            "INSERT INTO firefly_bot.characters"
             "(discord_id, char_name, char_race, char_class, char_type, is_officer, char_priority)"
             f" VALUES ('{discord_id}', '{char_name}', '{char_race}', '{char_class}', '{char_type}', 0, {char_priority})"
         )
@@ -193,7 +127,7 @@ class Database:
         :return: results of the update query, in list form
         """
         # begin the query string
-        query = f"UPDATE sos_bot.characters SET "
+        query = f"UPDATE firefly_bot.characters SET "
 
         # add only the options selected by user to query
         if new_name is not None:
@@ -228,25 +162,9 @@ class Database:
         :char_name: string, the name to delete
         :return: results of the delete query, in list form
         """
-        query = f"DELETE FROM sos_bot.characters WHERE char_name = '{char_name}'"
+        query = f"DELETE FROM firefly_bot.characters WHERE char_name = '{char_name}'"
 
         return self.execute_update(query)
-
-    # def update_mob_respawn(self, mob_name, respawn_dict):
-    #     """
-    #     edit the database entry for a mob with respawn timer data
-    #     :param mob_name: string
-    #     :param respawn_dict: dictionary of int values, with keys corresponding to units of time
-    #     :return: results of the update query, in list form
-    #     """
-    #     query = (
-    #         f"UPDATE sos_bot.respawns SET lockout_weeks = '{respawn_dict['weeks']}', "
-    #         f"lockout_days = '{respawn_dict['days']}', lockout_hours = '{respawn_dict['hours']}', "
-    #         f"lockout_minutes = '{respawn_dict['minutes']}' "
-    #         f"WHERE mob_name = '{mob_name}'"
-    #     )
-    #
-    #     return self.execute_update(query)
 
     ################# UTILITY METHODS #################
     def create_engine(self):
