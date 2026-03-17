@@ -288,8 +288,8 @@ class Updates(commands.Cog):
         :param ctx: the application context of the bot
         :param char_name: string entered by user (required)
         :param new_name: string entered by user if name needs changed (optional)
-        :param char_race: string (all eq races) selected from dropdown (optional)
-        :param char_class: string (all eq classes) selected from dropdown (optional)
+        :param char_race: string (all MnM races) selected from dropdown (optional)
+        :param char_class: string (all MnM classes) selected from dropdown (optional)
         :param char_tradeskill: string (all MnM tradeskills) selected from dropdown (optional)
         :param char_type: string (main/alt/mule) selected from dropdown (optional)
         :return: none
