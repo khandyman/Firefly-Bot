@@ -194,18 +194,25 @@ class Lookups(commands.Cog):
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
         results = self._database.find_all_mains()
-        main_list = f"Main characters in Firefly...\n"
+        # main_list = f"Main characters in Firefly...\n"
 
         # print one character per line
-        for result in results:
-            main_list = main_list + f"{result}\n"
+        # for result in results:
+        #     main_list = main_list + f"{result}\n"
 
-        main_list = main_list + f"Total count of mains: {len(results)}"
+        # main_list = main_list + f"Total count of mains: {len(results)}"
 
         await ctx.respond(
-            f"```{main_list}```",
+            f"```Main characters in Firefly...\n"
+            f"\n{self._helper.format_main_message(results)}\n"
+            f"Total count of mains: {len(results)}```",
             ephemeral=True
         )
+
+        # await ctx.respond(
+        #     f"```{main_list}```",
+        #     ephemeral=True
+        # )
 
     async def not_authorized(
             self,

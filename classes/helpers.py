@@ -49,6 +49,29 @@ class Helpers:
 
         return message
 
+    def format_main_message(self, results):
+        """
+        Format database results into table format
+        :param results: list of dictionary entries;
+        each item is a different character
+        :return: formatted string
+        """
+        headers = "Name Class Tradeskill".split()
+        row = "{:<15} {:<15} {:<15} \n"       # set column widths
+
+        message = row.format(*headers)
+        message = message + "-" * 52 + "\n"         # add a separator
+
+        for result in results:
+            # for each character, arrange them in the correct order
+            message = message + row.format(
+                str(result['char_name']),
+                str(result['char_class']),
+                str(result['char_tradeskill'])
+            )
+
+        return message
+
     @staticmethod
     def log_activity(user, command, entries):
         """

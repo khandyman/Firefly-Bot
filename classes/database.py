@@ -81,10 +81,11 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT char_name FROM firefly_bot.characters WHERE char_type = 'Main' ORDER BY char_name"
+            "SELECT char_name, char_class, char_tradeskill FROM firefly_bot.characters WHERE char_type = 'Main' ORDER BY char_class"
         )
 
-        return self.get_list(self.execute_read(query), 'char_name')
+        # return self.get_list(self.execute_read(query), 'char_name')
+        return self.execute_read(query)
 
     def get_all_characters(self):
         """
