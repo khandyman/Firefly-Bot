@@ -32,8 +32,8 @@ class Updates(commands.Cog):
         """
         current_value = ctx.value
 
-        if len(self._char_list) == 0:
-            self._char_list = self._database.get_all_char_names()
+        # if len(self._char_list) == 0:
+        self._char_list = self._database.get_all_char_names()
 
         return [choice for choice in self._char_list if current_value.lower() in choice.lower()]
 
