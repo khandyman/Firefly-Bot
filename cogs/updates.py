@@ -1,4 +1,6 @@
 import os
+from time import sleep
+
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -16,10 +18,28 @@ class Updates(commands.Cog):
 
         self._char_list = []
         self._discord_list = []
-        self._race_list = []
-        self._class_list = []
-        self._tradekill_list = []
-        self._type_list = []
+        self._race_list = self._helper.get_races()
+        self._class_list = self._helper.get_classes()
+        self._tradekill_list = self._helper.get_tradeskills()
+        self._type_list = self._helper.get_types()
+
+    def get_char_list(self):
+        return self._char_list
+
+    def get_discord_list(self):
+        return self._discord_list
+
+    def set_char_list(self):
+        self._char_list = self._database.get_all_char_names()
+
+    def set_discord_list(self):
+        self._discord_list = self._helper.get_all_discord_names('display')
+
+    def update_lists(self):
+        self._bot.get_cog("Lookups").set_name_list()
+        self._bot.get_cog("Lookups").set_discord_list()
+        self.set_char_list()
+        self.set_discord_list()
 
     async def char_name_autocompletion(
             self,
@@ -32,8 +52,8 @@ class Updates(commands.Cog):
         """
         current_value = ctx.value
 
-        # if len(self._char_list) == 0:
-        self._char_list = self._database.get_all_char_names()
+        if len(self.get_char_list()) == 0:
+            self._char_list = self._database.get_all_char_names()
 
         return [choice for choice in self._char_list if current_value.lower() in choice.lower()]
 
@@ -48,7 +68,7 @@ class Updates(commands.Cog):
         """
         current_value = ctx.value
 
-        if len(self._discord_list) == 0:
+        if len(self.get_discord_list()) == 0:
             self._discord_list = self._helper.get_all_discord_names('display')
 
         return [choice for choice in self._discord_list if current_value.lower() in choice.lower()]
@@ -130,6 +150,11 @@ class Updates(commands.Cog):
                 str,
                 description='Monsters and Memories character name',
             ),
+            char_type: discord.Option(
+                str,
+                description='Monsters and Memories character type',
+                autocomplete=types_autocompletion
+            ),
             char_race: discord.Option(
                 str,
                 description='Monsters and Memories character race',
@@ -147,12 +172,6 @@ class Updates(commands.Cog):
                 description='Monsters and Memories primary tradeskill',
                 autocomplete=tradeskills_autocompletion,
                 required=False
-            ),
-            char_type: discord.Option(
-                str,
-                description='Monsters and Memories character type',
-                autocomplete=types_autocompletion,
-                required=False
             )
     ):
         """
@@ -166,6 +185,8 @@ class Updates(commands.Cog):
         :param char_type: string (main/alt/mule) selected from dropdown (optional)
         :return: none
         """
+        await ctx.response.defer(ephemeral=True)
+
         # this slash command only available to officers
         target_role = discord.utils.get(ctx.guild.roles, name="Officer")
 
@@ -175,22 +196,25 @@ class Updates(commands.Cog):
             await self.not_authorized(ctx)
             return
 
-        self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
+        validation_check = self._helper.validate_entry(ctx.selected_options)
 
-        # this is checking the characters database to see if
-        # the discord id for the provided discord name exists
-        # i.e., have any characters ever been entered for this
-        # discord user
+        if validation_check != "pass":
+            await self.failed_validation(ctx, validation_check)
+            return
+
+        # this is checking the Discord guild list to see if
+        # the discord id provided actually exists
+        # i.e., is the discord id present on the server
         discord_id = self._helper.get_discord_id(discord_name, 'display')
 
         # if no discord id in database, notify user and exit
         if discord_id == "":
             await ctx.respond(
                 f"```Discord ID not found for {discord_name}.\n"
-                "Characters must have a valid Discord ID.```",
-                ephemeral=True
-            )
+                "Characters must have a valid Discord ID.```")
             return
+
+        self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
         # assign char_priority int based on char_type string
         # note: this is a hidden field in the database
@@ -220,29 +244,24 @@ class Updates(commands.Cog):
             if char_tradeskill is not None:
                 message = message + f"{char_tradeskill} | "
 
-            if char_type is not None:
-                message = message + f"{char_type} | "
+            # if char_type is not None:
+            message = message + f"{char_type} | "
 
             # trim trailing pipe symbol and whitespace
             message = message[0:len(message) - 3]
 
+            self.update_lists()
+
             await ctx.respond(
                 f"```{message}) entered."
-                f"\n{results} {row} added to database.```",
-                ephemeral=True
+                f"\n{results} {row} added to database.```"
             )
         except Exception as err:
             if "Duplicate entry" in str(err):
-                await ctx.respond(
-                    f"{char_name} already exists in the database.",
-                    ephemeral=True
-                )
+                await ctx.respond(f"{char_name} already exists in the database.")
             else:
                 self._helper.log_activity(ctx.author, ctx.command, str(err))
-                await ctx.respond(
-                    f"```An error has occurred: {err}.```",
-                    ephemeral=True
-                )
+                await ctx.respond(f"```An error has occurred: {err}.```")
 
     @discord.slash_command(name="edit_character", description="Edit an existing character")
     async def edit_character(
@@ -294,6 +313,8 @@ class Updates(commands.Cog):
         :param char_type: string (main/alt/mule) selected from dropdown (optional)
         :return: none
         """
+        await ctx.response.defer(ephemeral=True)
+
         # this slash command only available to officers
         target_role = discord.utils.get(ctx.guild.roles, name="Officer")
 
@@ -310,9 +331,13 @@ class Updates(commands.Cog):
         if len(ctx.selected_options) < 2:
             await ctx.respond(
                 f"```No options selected.\n"
-                f"Please try again.```",
-                ephemeral=True
-            )
+                f"Please try again.```")
+            return
+
+        validation_check = self._helper.validate_entry(ctx.selected_options)
+
+        if validation_check != "pass":
+            await self.failed_validation(ctx, validation_check)
             return
 
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
@@ -347,11 +372,11 @@ class Updates(commands.Cog):
         else:
             message = f"{char_name} not found"
 
+        self.update_lists()
+
         await ctx.respond(
             f"```{message}."
-            f"\n{results} {row} updated in database.```",
-            ephemeral=True
-        )
+            f"\n{results} {row} updated in database.```")
 
     @discord.slash_command(name="delete_character", description="Delete a character")
     async def delete_character(
@@ -369,6 +394,8 @@ class Updates(commands.Cog):
         :param char_name: string entered by user (required)
         :return: none
         """
+        await ctx.response.defer(ephemeral=True)
+
         # this slash command only available to officers
         target_role = discord.utils.get(ctx.guild.roles, name="Officer")
 
@@ -390,11 +417,11 @@ class Updates(commands.Cog):
         else:
             message = f"{char_name} not found"
 
+        self.update_lists()
+
         await ctx.respond(
             f"```{message}."
-            f"\n{results} {row} deleted from database.```",
-            ephemeral=True
-        )
+            f"\n{results} {row} deleted from database.```")
 
     async def not_authorized(
             self,
@@ -403,9 +430,17 @@ class Updates(commands.Cog):
         # Display unauthorized message to user in Discord
         await ctx.respond(
             f"```You do not have permission to use this command.\n"
-            f"Please try another command.```",
-            ephemeral=True
-        )
+            f"Please try another command.```")
+
+    async def failed_validation(
+            self,
+            ctx: discord.ApplicationContext,
+            error_type
+    ):
+        # Display failed validation message to user in Discord
+        await ctx.respond(
+            f"```You must choose one of the available options for {error_type}.\n"
+            f"Please try again.```")
 
 def setup(bot):
     load_dotenv()

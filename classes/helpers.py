@@ -24,6 +24,47 @@ class Helpers:
         else:
             return False
 
+    def validate_entry(self, entries):
+        races = self.get_races()
+        classes = self.get_classes()
+        tradeskills = self.get_tradeskills()
+        types = self.get_types()
+
+        for entry in entries:
+            match_entry = False
+
+            if entry['name'] == 'discord_name' or entry['name'] == 'char_name':
+                match_entry = True
+
+            if entry['name'] == 'char_type':
+                for curr_type in types:
+                    if entry['value'] == curr_type:
+                        match_entry = True
+                        break
+
+            if entry['name'] == 'char_race':
+                for curr_race in races:
+                    if entry['value'] == curr_race:
+                        match_entry = True
+                        break
+
+            if entry['name'] == 'char_class':
+                for curr_class in classes:
+                    if entry['value'] == curr_class:
+                        match_entry = True
+                        break
+
+            if entry['name'] == 'char_tradeskill':
+                for curr_tradeskill in tradeskills:
+                    if entry['value'] == curr_tradeskill:
+                        match_entry = True
+                        break
+
+            if match_entry is False:
+                return entry['name']
+
+        return "pass"
+
     def format_char_message(self, results):
         """
         Format database results into table format
@@ -127,9 +168,11 @@ class Helpers:
             if name_type == 'display':
                 if discord_name == member.display_name:
                     discord_id = member.id
+                    break
             elif name_type == 'account':
                 if discord_name == member.name:
                     discord_id = member.id
+                    break
 
         return discord_id
 

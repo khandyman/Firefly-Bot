@@ -18,8 +18,19 @@ class Lookups(commands.Cog):
 
         self._name_list = []
         self._discord_list = []
-        self._mob_list = []
-        self._zone_list = []
+
+    def get_name_list(self):
+        return self._name_list
+
+    def get_discord_list(self):
+        return self._discord_list
+
+    def set_name_list(self):
+        self._name_list = self._helper.get_combined_names(self._database.get_all_characters())
+        self._name_list.sort()
+
+    def set_discord_list(self):
+        self._discord_list = self._helper.get_all_discord_names('name')
 
     def discord_name_autocompletion(
             self,
@@ -33,9 +44,9 @@ class Lookups(commands.Cog):
         current_value = ctx.value
 
         if len(self._discord_list) == 0:
-            self._discord_list = self._helper.get_all_discord_names('name')
+            self.set_discord_list()
 
-        return [choice for choice in self._discord_list if current_value.lower() in choice.lower()]
+        return [choice for choice in self.get_discord_list() if current_value.lower() in choice.lower()]
 
     def combined_name_autocompletion(
             self,
@@ -48,11 +59,10 @@ class Lookups(commands.Cog):
         """
         current_value = ctx.value
 
-        # if len(self._name_list) == 0:
-        self._name_list = self._helper.get_combined_names(self._database.get_all_characters())
-        self._name_list.sort()
+        if len(self.get_name_list()) == 0:
+            self.set_name_list()
 
-        return [choice for choice in self._name_list if current_value.lower() in choice.lower()]
+        return [choice for choice in self.get_name_list() if current_value.lower() in choice.lower()]
 
     @discord.slash_command(name="lookup_characters",
                            description="Find a user's characters by their MnM name, "
@@ -74,6 +84,8 @@ class Lookups(commands.Cog):
         :param member_name: string selected by user (required)
         :return: none
         """
+        await ctx.response.defer(ephemeral=True)
+
         # # this slash command available to all members
         target_role = discord.utils.get(ctx.guild.roles, name="Member")
 
@@ -101,18 +113,14 @@ class Lookups(commands.Cog):
         if len(results) == 0:
             await ctx.respond(
                 f"```No records found for {user_choice}.\n"
-                f"Please try again.```",
-                ephemeral=True
-            )
+                f"Please try again.```")
             return
 
         # if matches found display discord id,
         # then print table of character results
         await ctx.respond(
             f"```List of characters for: {discord_name}\n"
-            f"\n{self._helper.format_char_message(results)}```",
-            ephemeral=True
-        )
+            f"\n{self._helper.format_char_message(results)}```")
 
     @discord.slash_command(
         name="find_main_from_discord",
@@ -133,6 +141,8 @@ class Lookups(commands.Cog):
         :param discord_name: string selected from dropdown (required)
         :return: none
         """
+        await ctx.response.defer(ephemeral=True)
+
         # this slash command available to all members
         target_role = discord.utils.get(ctx.guild.roles, name="Member")
 
@@ -150,9 +160,7 @@ class Lookups(commands.Cog):
         if discord_id == "":
             await ctx.respond(
                 f'```Discord ID not found for {discord_name}.\n'
-                f'Unable to query database.```',
-                ephemeral=True
-            )
+                f'Unable to query database.```')
             return
 
         results = self._database.find_main_from_discord(discord_id)
@@ -160,14 +168,10 @@ class Lookups(commands.Cog):
         # if results > 0, match was found
         if len(results) > 0:
             await ctx.respond(
-                f'```{discord_name} = {results[0]['char_name']}```',
-                ephemeral=True
-            )
+                f'```{discord_name} = {results[0]['char_name']}```')
         else:
             await ctx.respond(
-                f'```No records found for {discord_name}.```',
-                ephemeral=True
-            )
+                f'```No records found for {discord_name}.```')
 
     @discord.slash_command(
         name="find_all_mains",
@@ -182,8 +186,10 @@ class Lookups(commands.Cog):
         :param ctx: the application context of the bot
         :return: none
         """
-        # this slash command only available to officers
-        target_role = discord.utils.get(ctx.guild.roles, name="Officer")
+        await ctx.response.defer(ephemeral=True)
+
+        # this slash command available to all members
+        target_role = discord.utils.get(ctx.guild.roles, name="Member")
 
         # if validate_role returns false, user is not authorized,
         # so exit function
@@ -194,34 +200,18 @@ class Lookups(commands.Cog):
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
         results = self._database.find_all_mains()
-        # main_list = f"Main characters in Firefly...\n"
-
-        # print one character per line
-        # for result in results:
-        #     main_list = main_list + f"{result}\n"
-
-        # main_list = main_list + f"Total count of mains: {len(results)}"
 
         await ctx.respond(
             f"```Main characters in Firefly...\n"
             f"\n{self._helper.format_main_message(results)}\n"
-            f"Total count of mains: {len(results)}```",
-            ephemeral=True
-        )
-
-        # await ctx.respond(
-        #     f"```{main_list}```",
-        #     ephemeral=True
-        # )
+            f"Total count of mains: {len(results)}```")
 
     async def not_authorized(
             self,
             ctx: discord.ApplicationContext):
         await ctx.respond(
             f"```You do not have permission to use this command.\n"
-            f"Please try another command.```",
-            ephemeral=True
-        )
+            f"Please try another command.```")
 
 
 def setup(bot):
