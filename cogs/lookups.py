@@ -213,7 +213,6 @@ class Lookups(commands.Cog):
             f"```You do not have permission to use this command.\n"
             f"Please try another command.```")
 
-
 def setup(bot):
     load_dotenv()
 

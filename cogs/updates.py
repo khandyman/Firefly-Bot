@@ -251,6 +251,7 @@ class Updates(commands.Cog):
             message = message[0:len(message) - 3]
 
             self.update_lists()
+            await self.update_main_list(ctx)
 
             await ctx.respond(
                 f"```{message}) entered."
@@ -422,6 +423,34 @@ class Updates(commands.Cog):
         await ctx.respond(
             f"```{message}."
             f"\n{results} {row} deleted from database.```")
+
+    @discord.slash_command(
+        name="update_main_list",
+        description="Test programmatic message manipulation"
+    )
+    async def update_main_list(
+            self,
+            ctx: discord.ApplicationContext
+    ):
+        for option in ctx.selected_options:
+            if option['name'] == 'char_type':
+                if option['value'] == 'Main':
+                    results = self._database.find_all_mains()
+                    main_list = (f"```Main characters in Firefly...\n"
+                                 f"\n{self._helper.format_main_message(results)}\n"
+                                 f"Total count of mains: {len(results)}```")
+
+                    channel = self._bot.get_channel(1484348927003201717)
+                    history = await channel.history(limit=1).flatten()
+
+                    if len(history) == 1:
+                        for message in history:
+                            message_id = message.id
+                            message = await channel.fetch_message(message_id)
+
+                            await message.edit(content=main_list)
+                    else:
+                        await channel.send(main_list)
 
     async def not_authorized(
             self,
