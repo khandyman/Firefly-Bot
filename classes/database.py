@@ -42,9 +42,10 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT b.char_name, b.char_race, b.char_class, b.char_tradeskill, b.char_type, b.char_priority FROM firefly_bot.characters a"
-            f" JOIN firefly_bot.characters b ON a.discord_id = b.discord_id WHERE a.char_name = '{char_name}'"
-            "ORDER BY b.char_priority ASC"
+            "SELECT b.char_name, b.char_race, b.char_class, b.char_tradeskill, "
+            "b.char_type, b.char_priority FROM firefly_bot.characters a "
+            f"JOIN firefly_bot.characters b ON a.discord_id = b.discord_id WHERE "
+            f"a.char_name = '{char_name}' ORDER BY b.char_priority ASC"
         )
 
         return self.execute_read(query)
@@ -57,7 +58,7 @@ class Database:
         """
         query = (
             "SELECT char_name from firefly_bot.characters WHERE "
-            f" discord_id = {discord_id} AND char_type = 'Main'"
+            f"discord_id = {discord_id} AND char_type = 'Main'"
         )
 
         return self.execute_read(query)
@@ -70,7 +71,7 @@ class Database:
         """
         query = (
             "SELECT discord_id from firefly_bot.characters WHERE "
-            f" char_name = '{char_name}'"
+            f"char_name = '{char_name}'"
         )
 
         return self.execute_read(query)
@@ -81,7 +82,9 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT char_name, char_class, char_tradeskill FROM firefly_bot.characters WHERE char_type = 'Main' ORDER BY char_class"
+            "SELECT char_name, char_class, char_tradeskill FROM "
+            "firefly_bot.characters WHERE char_type = 'Main' "
+            "ORDER BY char_class"
         )
 
         # return self.get_list(self.execute_read(query), 'char_name')
@@ -93,7 +96,8 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT discord_id, char_name FROM firefly_bot.characters"
+            "SELECT discord_id, char_name FROM "
+            "firefly_bot.characters"
         )
 
         return self.execute_read(query)
@@ -105,6 +109,16 @@ class Database:
         :return: results of the query, in list form
         """
         return self.get_list(self.get_all_characters(), 'char_name')
+
+    def get_char_and_type(self, char_name):
+
+        query = (
+            "SELECT char_name, char_type FROM "
+            "firefly_bot.characters WHERE "
+            f"char_name = '{char_name}'"
+        )
+
+        return self.execute_read(query)
 
     ################# UPDATE METHODS #################
     def insert_character(self, discord_id, char_name, char_race, char_class,

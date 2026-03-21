@@ -251,7 +251,7 @@ class Updates(commands.Cog):
             message = message[0:len(message) - 3]
 
             self.update_lists()
-            await self.update_main_list(ctx)
+            await self.update_main_list(ctx, "")
 
             await ctx.respond(
                 f"```{message}) entered."
@@ -374,6 +374,7 @@ class Updates(commands.Cog):
             message = f"{char_name} not found"
 
         self.update_lists()
+        await self.update_main_list(ctx, "")
 
         await ctx.respond(
             f"```{message}."
@@ -408,6 +409,12 @@ class Updates(commands.Cog):
 
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
+        db_type = ""
+        char_results = self._database.get_char_and_type(char_name)
+
+        for char in char_results:
+            db_type = char['char_type']
+
         results = self._database.delete_character(char_name)
         row = self._helper.get_row(results)
 
@@ -420,37 +427,55 @@ class Updates(commands.Cog):
 
         self.update_lists()
 
+        if db_type == "Main":
+            await self.update_main_list(ctx, db_type)
+
         await ctx.respond(
             f"```{message}."
             f"\n{results} {row} deleted from database.```")
 
     @discord.slash_command(
         name="update_main_list",
-        description="Test programmatic message manipulation"
+        description="Update Discord main list after edits"
     )
     async def update_main_list(
             self,
-            ctx: discord.ApplicationContext
+            ctx: discord.ApplicationContext,
+            db_type
     ):
+        char_name = ""
+        cmd_type = ""
+
         for option in ctx.selected_options:
+            if option['name'] == 'char_name':
+                char_name = option['value']
+
             if option['name'] == 'char_type':
-                if option['value'] == 'Main':
-                    results = self._database.find_all_mains()
-                    main_list = (f"```Main characters in Firefly...\n"
-                                 f"\n{self._helper.format_main_message(results)}\n"
-                                 f"Total count of mains: {len(results)}```")
+                cmd_type = option['value']
 
-                    channel = self._bot.get_channel(1484348927003201717)
-                    history = await channel.history(limit=1).flatten()
+        if cmd_type == "" and db_type == "":
+            char_results = self._database.get_char_and_type(char_name)
 
-                    if len(history) == 1:
-                        for message in history:
-                            message_id = message.id
-                            message = await channel.fetch_message(message_id)
+            for char in char_results:
+                db_type = char['char_type']
 
-                            await message.edit(content=main_list)
-                    else:
-                        await channel.send(main_list)
+        if cmd_type == 'Main' or db_type == 'Main':
+            results = self._database.find_all_mains()
+            main_list = (f"```Main characters in Firefly...\n"
+                         f"\n{self._helper.format_main_message(results)}\n"
+                         f"Total count of mains: {len(results)}```")
+
+            channel = self._bot.get_channel(1484348927003201717)
+            history = await channel.history(limit=1).flatten()
+
+            if len(history) > 0:
+                for item in history:
+                    message_id = item.id
+                    message = await channel.fetch_message(message_id)
+
+                    await message.delete()
+
+            await channel.send(main_list)
 
     async def not_authorized(
             self,
