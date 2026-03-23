@@ -200,6 +200,7 @@ class Lookups(commands.Cog):
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
         results = self._database.find_all_mains()
+        results = self._helper.convert_ids_to_names(results)
 
         await ctx.respond(
             f"```Main characters in Firefly...\n"

@@ -155,16 +155,15 @@ class Updates(commands.Cog):
                 description='Monsters and Memories character type',
                 autocomplete=types_autocompletion
             ),
-            char_race: discord.Option(
-                str,
-                description='Monsters and Memories character race',
-                autocomplete=races_autocompletion,
-                required=False
-            ),
             char_class: discord.Option(
                 str,
                 description='Monsters and Memories character class',
                 autocomplete=classes_autocompletion,
+            ),
+            char_race: discord.Option(
+                str,
+                description='Monsters and Memories character race',
+                autocomplete=races_autocompletion,
                 required=False
             ),
             char_tradeskill: discord.Option(
@@ -460,7 +459,10 @@ class Updates(commands.Cog):
                 db_type = char['char_type']
 
         if cmd_type == 'Main' or db_type == 'Main':
+            # results = self._bot.get_cog('Lookups').find_all_mains(ctx)
             results = self._database.find_all_mains()
+            results = self._helper.convert_ids_to_names(results)
+
             main_list = (f"```Main characters in Firefly...\n"
                          f"\n{self._helper.format_main_message(results)}\n"
                          f"Total count of mains: {len(results)}```")

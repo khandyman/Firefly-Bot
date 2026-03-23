@@ -82,7 +82,7 @@ class Database:
         :return: results of the select query, in list form
         """
         query = (
-            "SELECT char_name, char_class, char_tradeskill FROM "
+            "SELECT discord_id, char_name, char_class, char_tradeskill FROM "
             "firefly_bot.characters WHERE char_type = 'Main' "
             "ORDER BY char_class"
         )

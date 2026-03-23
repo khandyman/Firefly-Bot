@@ -97,15 +97,16 @@ class Helpers:
         each item is a different character
         :return: formatted string
         """
-        headers = "Name Class Tradeskill".split()
-        row = "{:<15} {:<15} {:<15} \n"       # set column widths
+        headers = "Discord Character Class Tradeskill".split()
+        row = "{:<18} {:<15} {:<15} {:<15} \n"       # set column widths
 
         message = row.format(*headers)
-        message = message + "-" * 52 + "\n"         # add a separator
+        message = message + "-" * 65 + "\n"         # add a separator
 
         for result in results:
             # for each character, arrange them in the correct order
             message = message + row.format(
+                str(result['discord_id']),
                 str(result['char_name']),
                 str(result['char_class']),
                 str(result['char_tradeskill'])
@@ -183,7 +184,7 @@ class Helpers:
         :return: string Discord display_name
         """
         discord_name = ""
-
+        # print(f'get_discord_name param value: {discord_id}')
         # if a valid dict entry was passed in...
         if len(discord_id) > 0:
             discord_id = discord_id[0]['discord_id']
@@ -195,6 +196,21 @@ class Helpers:
                 discord_name = member.display_name
 
         return discord_name
+
+    def convert_ids_to_names(self, results):
+        for result in results:
+            # print(f'original param: {result}')
+            key, val = next(iter(result.items()))
+            # print(f'key and val: {key} | {val}')
+            discord_id = {key: val}
+            # print(f'dict format: {discord_id}')
+            discord_id = [discord_id]
+            # print(f'final format: {discord_id}')
+
+            discord_name = self.get_discord_name(discord_id)
+            result['discord_id'] = discord_name[:18]
+
+        return results
 
     def get_all_discord_names(self, name_type):
         """
