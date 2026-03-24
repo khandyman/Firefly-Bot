@@ -25,17 +25,37 @@ class Helpers:
             return False
 
     def validate_entry(self, entries):
+        """
+        Compare user's options to acceptable choices;
+        return true only if all options are valid
+        :param entries: list of selection options from ctx
+        :return: boolean
+        """
+        # get lists of acceptable option choices
         races = self.get_races()
         classes = self.get_classes()
         tradeskills = self.get_tradeskills()
         types = self.get_types()
 
+        # loop through selection options
         for entry in entries:
+            # default bool flag to false so that function
+            # will automatically return false if match is
+            # not found for current option in list
             match_entry = False
 
+            # we are not validating char names, since they could be anything,
+            # or discord names, because I don't feel like looping through
+            # the whole guild list to validate (NOTE: this could be a point
+            # of failure, and I may eventually need to validate discord name
+            # against list from Discord API
             if entry['name'] == 'discord_name' or entry['name'] == 'char_name':
                 match_entry = True
 
+            # for each of the next four conditional statements,
+            # if the option is present, then compare it with
+            # appropriate choices list; if match found change
+            # bool flag to true and break out of choices loop
             if entry['name'] == 'char_type':
                 for curr_type in types:
                     if entry['value'] == curr_type:
@@ -60,9 +80,14 @@ class Helpers:
                         match_entry = True
                         break
 
+            # if no matches were found for any of the options,
+            # then validation has failed, so return the name
+            # of the entry that failed to match
             if match_entry is False:
                 return entry['name']
 
+        # if the whole loop of options cycled through with no
+        # premature returns, then validation has passed
         return "pass"
 
     def format_char_message(self, results):
@@ -184,7 +209,7 @@ class Helpers:
         :return: string Discord display_name
         """
         discord_name = ""
-        # print(f'get_discord_name param value: {discord_id}')
+
         # if a valid dict entry was passed in...
         if len(discord_id) > 0:
             discord_id = discord_id[0]['discord_id']
@@ -198,16 +223,30 @@ class Helpers:
         return discord_name
 
     def convert_ids_to_names(self, results):
+        """
+        Take in a list of dicts with discord ids as one of the fields
+        and convert the ids to discord display names
+        :param results: list of dicts from database query
+        :return: same list of dicts but with ids converted to names
+        """
+        # loop through entire list of dicts, performing conversion
+        # of discord id to name for each entry
         for result in results:
-            # print(f'original param: {result}')
+            # grab discord id key:value pair, can use next(iter)
+            # because discord id will always be first dict entry
+            # of each dict in the list
             key, val = next(iter(result.items()))
-            # print(f'key and val: {key} | {val}')
+            # assign key and value to new dict
             discord_id = {key: val}
-            # print(f'dict format: {discord_id}')
+            # enclose it in a list (purely because that's how
+            # get_discord_name function is expecting it
             discord_id = [discord_id]
-            # print(f'final format: {discord_id}')
 
+            # get the discord name
             discord_name = self.get_discord_name(discord_id)
+            # assign it to the current dict entry, but only
+            # the first 18 characters to keep final printed
+            # list from being too wide
             result['discord_id'] = discord_name[:18]
 
         return results

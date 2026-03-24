@@ -195,6 +195,7 @@ class Updates(commands.Cog):
             await self.not_authorized(ctx)
             return
 
+        # validate user entry to ensure they're playing by the rules
         validation_check = self._helper.validate_entry(ctx.selected_options)
 
         if validation_check != "pass":
@@ -249,7 +250,9 @@ class Updates(commands.Cog):
             # trim trailing pipe symbol and whitespace
             message = message[0:len(message) - 3]
 
+            # update the char_name and discord_name lists for both cogs
             self.update_lists()
+            # update guild-main-list on Discord server
             await self.update_main_list(ctx, "")
 
             await ctx.respond(
@@ -334,6 +337,7 @@ class Updates(commands.Cog):
                 f"Please try again.```")
             return
 
+        # validate user entry to ensure they're playing by the rules
         validation_check = self._helper.validate_entry(ctx.selected_options)
 
         if validation_check != "pass":
@@ -372,7 +376,9 @@ class Updates(commands.Cog):
         else:
             message = f"{char_name} not found"
 
+        # update the char_name and discord_name lists for both cogs
         self.update_lists()
+        # update guild-main-list on Discord server
         await self.update_main_list(ctx, "")
 
         await ctx.respond(
@@ -408,12 +414,11 @@ class Updates(commands.Cog):
 
         self._helper.log_activity(ctx.author, ctx.command, ctx.selected_options)
 
-        db_type = ""
+        # obtain char type from database prior to deletion
         char_results = self._database.get_char_and_type(char_name)
+        db_type = char_results[0]['char_type'] # char['char_type']
 
-        for char in char_results:
-            db_type = char['char_type']
-
+        # execute the delete
         results = self._database.delete_character(char_name)
         row = self._helper.get_row(results)
 
@@ -442,41 +447,66 @@ class Updates(commands.Cog):
             ctx: discord.ApplicationContext,
             db_type
     ):
+        """
+        Delete a character from the database
+        :param ctx: the application context of the bot
+        :param db_type: string representing character type in database (required)
+        :return: none
+        """
         char_name = ""
+        # cmd_type reflects whether user selected char type in options
         cmd_type = ""
 
         for option in ctx.selected_options:
+            # get the char name selected by user
             if option['name'] == 'char_name':
                 char_name = option['value']
 
+            # get char type selected by user, if applicable
             if option['name'] == 'char_type':
                 cmd_type = option['value']
 
+        # if both cmd type and db type are empty strings we don't know what
+        # the char type is so we need to pull it from database
+        # (cmd type will be empty if delete_character or edit_character with no type)
+        # (db type will be empty if add_character or edit_character)
+        # so this will only fire on edit_character with no type
         if cmd_type == "" and db_type == "":
             char_results = self._database.get_char_and_type(char_name)
+            db_type = char_results[0]['char_type']
 
-            for char in char_results:
-                db_type = char['char_type']
-
+        # if user entered char type as Main with add_character or edit_character
+        # or delete_character returned existing Main status
+        # or edit_character with no type resulted in db type of Main
+        # then we need to update the guild main list
         if cmd_type == 'Main' or db_type == 'Main':
-            # results = self._bot.get_cog('Lookups').find_all_mains(ctx)
+            # get all the mains
             results = self._database.find_all_mains()
+            #convert discord ids to char names
             results = self._helper.convert_ids_to_names(results)
 
+            # format the ctx response message
             main_list = (f"```Main characters in Firefly...\n"
                          f"\n{self._helper.format_main_message(results)}\n"
                          f"Total count of mains: {len(results)}```")
 
+            # get the guild-main-list channel object
             channel = self._bot.get_channel(1484348927003201717)
+            # grab the channel history (should be a single post)
             history = await channel.history(limit=1).flatten()
 
+            # if post already exists in channel
             if len(history) > 0:
                 for item in history:
+                    # grab message id
                     message_id = item.id
+                    # grab message object
                     message = await channel.fetch_message(message_id)
 
+                    # delete message object
                     await message.delete()
 
+            # send new message with above formatted message content
             await channel.send(main_list)
 
     async def not_authorized(

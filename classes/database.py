@@ -87,7 +87,6 @@ class Database:
             "ORDER BY char_class"
         )
 
-        # return self.get_list(self.execute_read(query), 'char_name')
         return self.execute_read(query)
 
     def get_all_characters(self):
@@ -253,12 +252,3 @@ class Database:
             results_list.append(result[field])
 
         return results_list
-
-    def format_quotes(self, mob_name):
-        quote_index = mob_name.find("'")
-
-        if quote_index != -1:
-            temp_string = mob_name
-            mob_name = temp_string[:quote_index] + "'" + temp_string[quote_index:]
-
-        return mob_name
